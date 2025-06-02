@@ -1,0 +1,1 @@
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Montserat&size=24&pause=1000&center=true&vCenter=true&width=600&lines=Welcome+To+Kelompok+6+Praktikum+Mobile+2025)](https://git.io/typing-svg)
