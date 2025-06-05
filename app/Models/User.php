@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
     ];
 
     /**
@@ -38,6 +39,12 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
+
+      public function pickupRequests()
+    {
+        return $this->hasMany(PickupRequest::class);
+    }
+    
     protected function casts(): array
     {
         return [

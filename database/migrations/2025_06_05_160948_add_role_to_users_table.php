@@ -11,14 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('waste_types', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
-            $table->string('name');
-            $table->string('unit'); // misalnya gram, kg
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            //
         });
-
     }
 
     /**
@@ -26,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('waste_types');
+        Schema::table('users', function (Blueprint $table) {
+            //
+        });
     }
 };

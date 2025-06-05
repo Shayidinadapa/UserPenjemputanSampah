@@ -2,49 +2,46 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
+use App\Models\WasteType;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Validator;
 
 class WasteController extends Controller
 {
-    public function categories()
+    public function index()
     {
-        $categories = Category::all();
-        return response()->json([
-            'success' => true,
-            'data' => $categories
-        ]);
-    }
-
-    public function wasteTypes($categoryId)
-    {
-        $category = Category::with('wasteTypes')->find($categoryId);
-        if (!$category) {
-            return response()->json(['success' => false, 'message' => 'Kategori tidak ditemukan.'], 404);
-        }
+        $wasteTypes = WasteType::with('category')->get();
 
         return response()->json([
             'success' => true,
-            'data' => $category->wasteTypes
+            'data' => $wasteTypes
         ]);
     }
-
-    // Tambah kategori baru
+    
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
+            'unit' => 'required|string|max:50',
         ]);
 
-        $category = Category::create([
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $wasteType = WasteType::create([
+            'category_id' => $request->category_id,
             'name' => $request->name,
+            'unit' => $request->unit,
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Kategori berhasil ditambahkan',
-            'data' => $category
+            'message' => 'Jenis Sampah berhasil ditambahkan.',
+            'data' => $wasteType
         ], 201);
     }
+
+    
 }
