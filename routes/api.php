@@ -5,15 +5,19 @@ use App\Http\Controllers\Api\WasteController;
 use App\Http\Controllers\Api\PickupController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Controllers\CategoryController;
+
 
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
-use App\Http\Controllers\CategoryController;
-use App\Models\Category;
 
+
+Route::middleware('auth:sanctum')->get('/pickup/history', [PickupController::class, 'history']);
+Route::middleware('auth:sanctum')->put('/pickup/{id}/status', [PickupController::class, 'updateStatus']);
+Route::middleware('auth:sanctum')->get('/pickup/statistics', [PickupController::class, 'statistics']);
 Route::middleware('auth:sanctum')->get('/categories', [CategoryController::class, 'index']);
 Route::middleware('auth:sanctum')->post('/categories', [WasteController::class, 'store']);
 Route::middleware(['auth:sanctum'])->group(function () {

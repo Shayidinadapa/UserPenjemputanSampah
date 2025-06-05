@@ -82,23 +82,26 @@ class PickupController extends Controller
 
 
     public function statistics(Request $request)
-    {
-        $userId = $request->user()->id;
+{
+    $userId = $request->user()->id;
 
-        $totalWeight = PickupRequest::where('user_id', $userId)
-            ->where('status', 'picked_up')
-            ->sum('weight');
+    // Ambil total berat dari pickup yang sudah dijemput
+    $totalWeight = PickupRequest::where('user_id', $userId)
+        ->where('status', 'picked_up') // status sudah dijemput
+        ->sum('weight');
 
-        $points = $totalWeight * 10;
+    // Hitung poin, misalnya 10 poin per 1 kg
+    $points = $totalWeight * 10;
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'total_weight' => $totalWeight,
-                'points' => $points
-            ]
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'total_weight_kg' => $totalWeight,
+            'points' => $points
+        ]
+    ]);
+}
+
 
     public function show($id, Request $request)
 {
@@ -131,6 +134,48 @@ class PickupController extends Controller
     ]);
 }
 
+    public function updateStatus(Request $request, $id)
+{
+    $request->validate([
+        'status' => 'required|in:pending,picked_up,rejected'
+    ]);
+
+    $pickup = PickupRequest::findOrFail($id);
+    $pickup->status = $request->status;
+    $pickup->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Status updated successfully',
+        'data' => $pickup
+    ]);
+}
+
+    public function history(Request $request)
+{
+    $userId = $request->user()->id;
+
+    $history = PickupRequest::with(['wasteType.category'])
+        ->where('user_id', $userId)
+        ->whereIn('status', ['picked_up', 'rejected'])
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->map(function ($pickup) {
+            return [
+                'id' => $pickup->id,
+                'waste_type' => $pickup->wasteType->name,
+                'category' => $pickup->wasteType->category->name,
+                'weight' => $pickup->weight,
+                'status' => $pickup->status,
+                'picked_up_at' => $pickup->updated_at->toDateTimeString()
+            ];
+        });
+
+    return response()->json([
+        'success' => true,
+        'data' => $history
+    ]);
+}
 
 }
 
