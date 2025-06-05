@@ -99,5 +99,38 @@ class PickupController extends Controller
             ]
         ]);
     }
+
+    public function show($id, Request $request)
+{
+    $pickup = \App\Models\PickupRequest::with(['wasteType.category', 'user'])
+        ->where('id', $id)
+        ->where('user_id', $request->user()->id)
+        ->first();
+
+    if (!$pickup) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Data penjemputan tidak ditemukan atau bukan milik Anda.'
+        ], 404);
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'id' => $pickup->id,
+            'waste_type' => $pickup->wasteType->name,
+            'category' => $pickup->wasteType->category->name,
+            'weight' => $pickup->weight,
+            'status' => $pickup->status,
+            'requested_at' => $pickup->created_at->toDateTimeString(),
+            'user' => [
+                'name' => $pickup->user->name,
+                'phone' => $pickup->user->phone
+            ]
+        ]
+    ]);
+}
+
+
 }
 
