@@ -30,7 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/waste-types', [WasteController::class, 'index']);
     Route::post('/waste-types', [WasteController::class, 'store']);
-    
+    Route::get('/waste-types', [WasteController::class, 'availableWasteTypes']);
+
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories', [WasteController::class, 'categories']);
     Route::get('/categories/{id}/waste-types', [WasteController::class, 'wasteTypes']);

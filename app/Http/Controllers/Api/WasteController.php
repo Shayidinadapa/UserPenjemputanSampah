@@ -43,5 +43,23 @@ class WasteController extends Controller
         ], 201);
     }
 
-    
+    public function availableWasteTypes()
+    {
+        $wasteTypes = WasteType::with('category')->get()->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'category' => [
+                    'id' => $item->category->id,
+                    'name' => $item->category->name,
+                ],
+                'unit' => $item->unit,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $wasteTypes
+        ]);
+    }
 }

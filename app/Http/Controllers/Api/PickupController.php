@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\PickupRequest;
 use App\Models\WasteType;
-use Illuminate\Http\Request;
+use Illuminate\Http\Request; 
 use Illuminate\Support\Facades\Validator;
 
 class PickupController extends Controller
@@ -80,19 +80,24 @@ class PickupController extends Controller
     ]);
 }
 
+
     public function statistics(Request $request)
     {
         $userId = $request->user()->id;
 
-        $totalWeight = PickupRequest::where('user_id', $userId)->where('status', 'picked_up')->sum('weight');
-        $points = $totalWeight * 10; // Misalnya 10 poin per 1 kg
+        $totalWeight = PickupRequest::where('user_id', $userId)
+            ->where('status', 'picked_up')
+            ->sum('weight');
+
+        $points = $totalWeight * 10;
 
         return response()->json([
-                'success' => true,
-                'data' => [
+            'success' => true,
+            'data' => [
                 'total_weight' => $totalWeight,
                 'points' => $points
             ]
         ]);
     }
 }
+
