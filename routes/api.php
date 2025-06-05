@@ -13,6 +13,8 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 use App\Http\Controllers\CategoryController;
 
 Route::middleware('auth:sanctum')->get('/categories', [CategoryController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/categories', [WasteController::class, 'store']);
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -20,7 +22,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/categories', [WasteController::class, 'categories']);
     Route::get('/categories/{id}/waste-types', [WasteController::class, 'wasteTypes']);
-
+    Route::post('/categories', [WasteController::class, 'store']);
+    
     Route::get('/pickups', [PickupController::class, 'index']);
     Route::get('/user/statistics', [PickupController::class, 'statistics']);
 });
