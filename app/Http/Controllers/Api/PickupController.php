@@ -1,181 +1,116 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\PickupRequest;
+use App\Http\Requests\PickupRequest as StorePickupRequest;
+use App\Http\Resources\PickupResource;
+use App\Models\Pickup;
+use App\Models\User;
 use App\Models\WasteType;
-use Illuminate\Http\Request; 
-use Illuminate\Support\Facades\Validator;
+use App\Traits\ApiResponse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class PickupController extends Controller
 {
-    public function store(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'waste_type_name' => 'required|string|max:255',
-        'category_id' => 'required|exists:categories,id',
-        'weight' => 'required|numeric|min:0.1'
-    ]);
+    use ApiResponse;
+    use AuthorizesRequests;
 
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => $validator->errors()->all()
-        ], 422);
+    public function store(StorePickupRequest $request)
+    {
+        try {
+            $pickup = DB::transaction(function () use ($request) {
+                $validatedData = $request->validated();
+                $user = $request->user();
+
+                $wasteType = $this->findOrCreateWasteType($validatedData);
+                $pickupData = $this->createPickupForUser($user, $wasteType, $validatedData);
+
+                return $pickupData;
+            });
+
+            return $this->successResponse(
+                new PickupResource($pickup->load('wasteType.category')),
+                'Permintaan penjemputan berhasil dibuat.',
+                201
+            );
+        } catch (Throwable $e) {
+            report($e);
+            return $this->errorResponse('Gagal memproses permintaan.', 500);
+        }
     }
-
-    $wasteType = \App\Models\WasteType::firstOrCreate(
-        ['name' => $request->waste_type_name],
-        ['category_id' => $request->category_id, 'unit' => 'kg']
-    );
-
-    $pickup = PickupRequest::create([
-        'user_id' => $request->user()->id,
-        'waste_type_id' => $wasteType->id,   // <-- Ganti di sini
-        'weight' => $request->weight,
-        'status' => 'pending',
-    ]);
-    
-    $pickup->load('wasteType.category');
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Permintaan penjemputan berhasil dibuat.',
-        'data' => [
-            'id' => $pickup->id,
-            'user_id' => $pickup->user_id,
-            'waste_type_id' => $pickup->waste_type_id,
-            'waste_type_name' => $pickup->wasteType->name,
-            'category_name' => $pickup->wasteType->category->name,
-            'weight' => $pickup->weight,
-            'status' => $pickup->status,
-            'created_at' => $pickup->created_at,
-            'updated_at' => $pickup->updated_at
-        ]
-    ]);
-}
-
 
     public function index(Request $request)
-{
-    $pickups = PickupRequest::with(['wasteType.category', 'user'])
-        ->where('user_id', $request->user()->id)
-        ->get()
-        ->map(function ($pickup) {
-            return [
-                'id' => $pickup->id,
-                'user_name' => $pickup->user->name,
-                'user_phone' => $pickup->user->phone,
-                'waste_type' => $pickup->wasteType->name,
-                'waste_category' => $pickup->wasteType->category->name,
-                'weight' => $pickup->weight,
-                'status' => $pickup->status,
-                'requested_at' => $pickup->created_at->toDateTimeString(),
-            ];
-        });
+    {
+        $pickups = Pickup::where('user_id', $request->user()->id)
+            ->with('wasteType.category', 'user')
+            ->latest()
+            ->get();
 
-    return response()->json([
-        'success' => true,
-        'data' => $pickups
-    ]);
-}
-
-
-    public function statistics(Request $request)
-{
-    $userId = $request->user()->id;
-
-    // Ambil total berat dari pickup yang sudah dijemput
-    $totalWeight = PickupRequest::where('user_id', $userId)
-        ->where('status', 'picked_up') // status sudah dijemput
-        ->sum('weight');
-
-    // Hitung poin, misalnya 10 poin per 1 kg
-    $points = $totalWeight * 10;
-
-    return response()->json([
-        'success' => true,
-        'data' => [
-            'total_weight_kg' => $totalWeight,
-            'points' => $points
-        ]
-    ]);
-}
-
-
-    public function show($id, Request $request)
-{
-    $pickup = \App\Models\PickupRequest::with(['wasteType.category', 'user'])
-        ->where('id', $id)
-        ->where('user_id', $request->user()->id)
-        ->first();
-
-    if (!$pickup) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Data penjemputan tidak ditemukan atau bukan milik Anda.'
-        ], 404);
+        return PickupResource::collection($pickups);
     }
 
-    return response()->json([
-        'success' => true,
-        'data' => [
-            'id' => $pickup->id,
-            'waste_type' => $pickup->wasteType->name,
-            'category' => $pickup->wasteType->category->name,
-            'weight' => $pickup->weight,
-            'status' => $pickup->status,
-            'requested_at' => $pickup->created_at->toDateTimeString(),
-            'user' => [
-                'name' => $pickup->user->name,
-                'phone' => $pickup->user->phone
-            ]
-        ]
-    ]);
-}
+    public function show(Pickup $pickup)
+    {
+        $this->authorize('view', $pickup);
+        return new PickupResource($pickup->load('wasteType.category', 'user'));
+    }
 
-    public function updateStatus(Request $request, $id)
-{
-    $request->validate([
-        'status' => 'required|in:pending,picked_up,rejected'
-    ]);
-
-    $pickup = PickupRequest::findOrFail($id);
-    $pickup->status = $request->status;
-    $pickup->save();
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Status updated successfully',
-        'data' => $pickup
-    ]);
-}
+    public function updateStatus(Request $request, Pickup $pickup)
+    {
+        $this->authorize('update', $pickup);
+        $validated = $request->validate(['status' => 'required|in:pending,picked_up,rejected']);
+        $pickup->update($validated);
+        return $this->successResponse(new PickupResource($pickup), 'Status berhasil diperbarui.');
+    }
 
     public function history(Request $request)
-{
-    $userId = $request->user()->id;
+    {
+        $history = Pickup::where('user_id', $request->user()->id)
+            ->whereIn('status', ['picked_up', 'rejected'])
+            ->with('wasteType.category')
+            ->latest()
+            ->get();
+        return PickupResource::collection($history);
+    }
 
-    $history = PickupRequest::with(['wasteType.category'])
-        ->where('user_id', $userId)
-        ->whereIn('status', ['picked_up', 'rejected'])
-        ->orderBy('created_at', 'desc')
-        ->get()
-        ->map(function ($pickup) {
-            return [
-                'id' => $pickup->id,
-                'waste_type' => $pickup->wasteType->name,
-                'category' => $pickup->wasteType->category->name,
-                'weight' => $pickup->weight,
-                'status' => $pickup->status,
-                'picked_up_at' => $pickup->updated_at->toDateTimeString()
-            ];
-        });
+    public function statistics(Request $request)
+    {
+        $totalWeight = Pickup::where('user_id', $request->user()->id)
+            ->where('status', 'picked_up')
+            ->sum('weight');
 
-    return response()->json([
-        'success' => true,
-        'data' => $history
-    ]);
+        $stats = [
+            'total_weight_kg' => round($totalWeight, 2),
+            'points' => $totalWeight * 10,
+        ];
+
+        return $this->successResponse($stats);
+    }
+
+
+    // ================================
+    // PRIVATE METHODS - Logika Bisnis
+    // ================================
+
+    private function findOrCreateWasteType(array $data): WasteType
+    {
+        return WasteType::firstOrCreate(
+            ['name' => $data['waste_type_name']],
+            ['category_id' => $data['category_id'], 'unit' => 'kg']
+        );
+    }
+
+    private function createPickupForUser(User $user, WasteType $wasteType, array $data): Pickup
+    {
+        return Pickup::create([
+            'user_id' => $user->id,
+            'waste_type_id' => $wasteType->id,
+            'weight' => $data['weight'],
+            'status' => 'pending',
+        ]);
+    }
 }
-
-}
-

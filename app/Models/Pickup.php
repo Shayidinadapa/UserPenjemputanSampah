@@ -4,11 +4,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PickupRequest extends Model
+class Pickup extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'waste_type_id', 'weight', 'status'];
+    protected $guarded = [];
 
     public function user()
     {

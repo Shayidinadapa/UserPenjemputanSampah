@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\WasteController;
+use App\Http\Controllers\Api\WasteTypeController;
 use App\Http\Controllers\Api\PickupController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CategoryController;
@@ -14,17 +14,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::apiResource('/categories', CategoryController::class)->only(['index', 'store']);
-    Route::apiResource('/waste-types', WasteController::class)->only(['index', 'store']);
+    Route::apiResource('/waste-types', WasteTypeController::class)->only(['index', 'store']);
 
-    Route::get('/categories/{category}/waste-types', [WasteController::class, 'wasteTypes']);
-    Route::get('/waste-types/available', [WasteController::class, 'availableWasteTypes']);
+    Route::get('/categories/{category}/waste-types', [WasteTypeController::class, 'wasteTypes']);
+    Route::get('/waste-types/available', [WasteTypeController::class, 'availableWasteTypes']);
 
     Route::prefix('/pickups')->controller(PickupController::class)->group(function () {
         Route::post('/', 'Store');
         Route::get('/', 'index');
-        Route::get('/{id}', 'show');
+        Route::get('/{pickup}', 'show');
         Route::get('/history', 'history');
-        Route::patch('/{id}/status', 'updateStatus');
+        Route::patch('/{pickup}/status', 'updateStatus');
         Route::get('/statistics', 'statistics');
     });
 
