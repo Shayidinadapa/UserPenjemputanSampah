@@ -4,7 +4,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "start": "npm i && composer update && cp .env.example .env && php artisan key:generate && npm run dev"
+        "start": "npm i && composer update && cp .env.example .env && php artisan key:generate && php artisan migrate && php artisan db:seed && npm run dev"
     },
     "devDependencies": {
         "autoprefixer": "^10.4.20",
