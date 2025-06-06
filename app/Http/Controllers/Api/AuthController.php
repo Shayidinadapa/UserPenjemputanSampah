@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\LoginRequest;
 use App\Http\Requests\Api\RegisterRequest;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
@@ -15,7 +16,7 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request)
     {
-        $validated = $request->validated;
+        $validated = $request->validated();
 
         $user = User::create([
             'name' => $validated['name'],
@@ -38,12 +39,12 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        $credentials = $request->validated;
+        $credentials = $request->validated();
 
         if (!Auth::attempt($credentials)) {
             return $this->errorResponse('Invalid email or password', 401);
         }
-        /** @var \App\Models\User $user */
+
         $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -53,5 +54,11 @@ class AuthController extends Controller
         ];
 
         return $this->successResponse($data, 'Login success');
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->auth()->logout();
+        return $this->successResponse(null,'Logout Success');
     }
 }

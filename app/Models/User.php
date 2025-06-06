@@ -42,9 +42,9 @@ class User extends Authenticatable
 
       public function pickupRequests()
     {
-        return $this->hasMany(PickupRequest::class);
+        return $this->hasMany(Pickup::class);
     }
-    
+
     protected function casts(): array
     {
         return [
