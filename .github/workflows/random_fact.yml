@@ -9,8 +9,14 @@ jobs:
       - name: Get a random fact
         id: fact
         run: |
-          FACT_JSON=$(curl -s "https://uselessfacts.jsph.pl/random.json?language=en")
-          FACT_TEXT=$(echo $FACT_JSON | jq -r .text)
+          FACT_JSON=$(curl -s -f "https://uselessfacts.jsph.pl/random.json?language=en")
+
+          if [ $? -eq 0 ]; then
+            FACT_TEXT=$(echo "$FACT_JSON" | jq -r .text)
+          else
+            FACT_TEXT="Ternyata, API fakta randomnya lagi istirahat. Mungkin dia juga butuh kopi seperti kita."
+          fi
+
           echo "text=$FACT_TEXT" >> $GITHUB_OUTPUT
 
       - name: Post fact as a comment
