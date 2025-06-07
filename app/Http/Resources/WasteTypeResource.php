@@ -16,11 +16,9 @@ class WasteTypeResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'status' => $this->status,
-            'weight_kg' => $this->weight,
-            'requested_at' => $this->created_at,
-            'user' => new UserResource($this->whenLoaded('user')),
-            'waste_details' => new WasteTypeResource($this->whenLoaded('wasteType')),
+            'name' => $this->name,
+            'unit' => $this->unit,
+            'category' => new CategoryResource($this->whenLoaded('category')),
         ];
     }
 }

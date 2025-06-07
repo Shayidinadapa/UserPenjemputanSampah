@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\PickupRequest as StorePickupRequest;
-use App\Http\Resources\PickupResource;
-use App\Models\Pickup;
+use App\Http\Requests\Api\StorePickupRequest;
+use App\Http\Resources\PickupRequestResource;
+use App\Models\PickupRequest;
 use App\Models\User;
 use App\Models\WasteType;
 use App\Traits\ApiResponse;
@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
-class PickupController extends Controller
+class PickupRequestController extends Controller
 {
     use ApiResponse;
     use AuthorizesRequests;
@@ -29,11 +29,11 @@ class PickupController extends Controller
                 $wasteType = $this->findOrCreateWasteType($validatedData);
                 $pickupData = $this->createPickupForUser($user, $wasteType, $validatedData);
 
-                return $pickupData;
+                return $pickupData->load('wasteType.category');
             });
 
             return $this->successResponse(
-                new PickupResource($pickup->load('wasteType.category')),
+                new PickupRequestResource($pickup),
                 'Permintaan penjemputan berhasil dibuat.',
                 201
             );
@@ -45,41 +45,41 @@ class PickupController extends Controller
 
     public function index(Request $request)
     {
-        $pickups = Pickup::where('user_id', $request->user()->id)
+        $pickups = PickupRequest::where('user_id', $request->user()->id)
             ->with('wasteType.category', 'user')
             ->latest()
             ->get();
 
-        return PickupResource::collection($pickups);
+        return PickupRequestResource::collection($pickups);
     }
 
-    public function show(Pickup $pickup)
+    public function show(PickupRequest $pickup)
     {
         $this->authorize('view', $pickup);
-        return new PickupResource($pickup->load('wasteType.category', 'user'));
+        return new PickupRequestResource($pickup->load('wasteType.category', 'user'));
     }
 
-    public function updateStatus(Request $request, Pickup $pickup)
+    public function updateStatus(Request $request, PickupRequest $pickup)
     {
         $this->authorize('update', $pickup);
         $validated = $request->validate(['status' => 'required|in:pending,picked_up,rejected']);
         $pickup->update($validated);
-        return $this->successResponse(new PickupResource($pickup), 'Status berhasil diperbarui.');
+        return $this->successResponse(new PickupRequestResource($pickup), 'Status berhasil diperbarui.');
     }
 
     public function history(Request $request)
     {
-        $history = Pickup::where('user_id', $request->user()->id)
+        $history = PickupRequest::where('user_id', $request->user()->id)
             ->whereIn('status', ['picked_up', 'rejected'])
             ->with('wasteType.category')
             ->latest()
             ->get();
-        return PickupResource::collection($history);
+        return PickupRequestResource::collection($history);
     }
 
     public function statistics(Request $request)
     {
-        $totalWeight = Pickup::where('user_id', $request->user()->id)
+        $totalWeight = PickupRequest::where('user_id', $request->user()->id)
             ->where('status', 'picked_up')
             ->sum('weight');
 
@@ -104,9 +104,9 @@ class PickupController extends Controller
         );
     }
 
-    private function createPickupForUser(User $user, WasteType $wasteType, array $data): Pickup
+    private function createPickupForUser(User $user, WasteType $wasteType, array $data): PickupRequest
     {
-        return Pickup::create([
+        return PickupRequest::create([
             'user_id' => $user->id,
             'waste_type_id' => $wasteType->id,
             'weight' => $data['weight'],

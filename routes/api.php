@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\WasteTypeController;
-use App\Http\Controllers\Api\PickupController;
+use App\Http\Controllers\Api\PickupRequestController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CategoryController;
 
@@ -19,14 +19,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/categories/{category}/waste-types', [WasteTypeController::class, 'wasteTypes']);
     Route::get('/waste-types/available', [WasteTypeController::class, 'availableWasteTypes']);
 
-    Route::prefix('/pickups')->controller(PickupController::class)->group(function () {
-        Route::post('/', 'Store');
-        Route::get('/', 'index');
-        Route::get('/{pickup}', 'show');
+    Route::prefix('/pickups')->controller(PickupRequestController::class)->group(function () {
         Route::get('/history', 'history');
-        Route::patch('/{pickup}/status', 'updateStatus');
         Route::get('/statistics', 'statistics');
+        Route::get('/', 'index');
+        Route::post('/', 'Store');
+        Route::get('/{pickup}', 'show');
+        Route::patch('/{pickup}/status', 'updateStatus');
     });
 
-    Route::get('/user/statistics', [PickupController::class, 'statistics']);
+    Route::get('/user/statistics', [PickupRequestController::class, 'statistics']);
 });
