@@ -1,0 +1,20 @@
+name: Policy Commit
+
+on: [push]
+
+jobs:
+  check-commit-message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for lazy commit message
+        if: |
+          contains(github.event.head_commit.message, 'update') ||
+          contains(github.event.head_commit.message, 'fix') ||
+          contains(github.event.head_commit.message, 'wip') ||
+          (github.event.head_commit.message == 'Update' || github.event.head_commit.message == 'Fix')
+        uses: peter-evans/commit-comment@v2
+        with:
+          body: |
+            Hmm, @${{ github.actor }}... pesan commit-nya singkat amat. 🤔
+            Lain kali ceritain dong perubahannya apa aja, biar kita semua makin paham.
+            ![Sherlock GIF](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExajFzMWl2ajk3NHlhaXJ0dGd2cW1xNTN4YWlxa3RtdHlhdWhnbXJubCZlcD12MV9pbnRlcm5hbF9naWZzX2dpZklkJmN0PWc/CaiVJuZGvR8I0/giphy.gif)

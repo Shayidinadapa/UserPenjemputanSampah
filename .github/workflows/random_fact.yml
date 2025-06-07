@@ -1,0 +1,24 @@
+name: Pemberi Fakta Random
+
+on: [push]
+
+jobs:
+  get-and-comment-fact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get a random fact
+        id: fact
+        run: |
+          FACT_JSON=$(curl -s "https://uselessfacts.jsph.pl/random.json?language=en")
+          FACT_TEXT=$(echo $FACT_JSON | jq -r .text)
+          echo "text=$FACT_TEXT" >> $GITHUB_OUTPUT
+
+      - name: Post fact as a comment
+        uses: peter-evans/commit-comment@v2
+        with:
+          body: |
+            Kerja bagus, @${{ github.actor }}! Sambil istirahat, nih ada fakta random buat kamu:
+
+            > **${{ steps.fact.outputs.text }}**
+
+            Semoga harimu makin... berpengetahuan! 😂

@@ -1,0 +1,63 @@
+name: Comentator
+
+on: [push]
+
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+      - name: Install Dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      - name: Generate key
+        run: php artisan key:generate
+      - name: Create Database
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+      - name: Execute tests
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+        run: php artisan test
+
+  comment-on-success:
+    runs-on: ubuntu-latest
+    needs: [laravel-tests]
+    if: success()
+    steps:
+      - name: Post Success Comment
+        uses: peter-evans/commit-comment@v2
+        with:
+          body: |
+            Wih, mantap jiwa, @${{ github.actor }}! 🔥
+            Semua tes berhasil, kodemu emang bukan kaleng-kaleng! 🚀
+            ![GIF Keren](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExODg3ZGY4NjE4YjgyYzg2MGIzNzJlYmQwNGE3YTRjYjMzN2ExYjQzNSZlcD12MV9pbnRlcm5hbF9naWZzX2dpZklkJmN0PWc/3o7abGQa0aRkqRB67K/giphy.gif)
+
+  comment-on-failure:
+    runs-on: ubuntu-latest
+    needs: [laravel-tests]
+    if: failure()
+    steps:
+      - name: Post Failure Comment
+        uses: peter-evans/commit-comment@v2
+        with:
+          body: |
+            Waduh, @${{ github.actor }}... ada yang retak nih. 💔
+            Tes-nya gagal, coba cek lagi deh. Jangan bikin malu, ya! 😉
+            ```
+            _______
+            < Error bego! Cek lagi sono;v >
+            -------
+                   \   ^__^
+                    \  (oo)\_______
+                       (__)\       )\/\
+                           ||----w |
+                           ||     ||
+            ```

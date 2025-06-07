@@ -1,0 +1,38 @@
+name: Statistic
+
+on: [push]
+
+jobs:
+  comment-on-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: Get changed file count
+        id: files
+        run: |
+          git diff --name-only HEAD^ HEAD > changed_files.txt
+          echo "count=$(cat changed_files.txt | wc -l)" >> $GITHUB_OUTPUT
+
+      - name: Create Comment Body
+        id: comment_body
+        run: |
+          count=${{ steps.files.outputs.count }}
+          comment=""
+          if (( count == 1 )); then
+            comment="Cuma satu file, @${{ github.actor }}? Sat-set banget nih, kayak kilat! ⚡"
+          elif (( count <= 5 )); then
+            comment="Oke, ${{ steps.files.outputs.count }} file... Pemanasan yang bagus, @${{ github.actor }}! 👍"
+          elif (( count <= 15 )); then
+            comment="Wih, ${{ steps.files.outputs.count }} file! Lagi semangat-semangatnya nih, @${{ github.actor }}. Terus gas!"
+          else
+            comment="GOKIL! ${{ steps.files.outputs.count }} file sekali push! 🤯 Hati-hati, @${{ github.actor }}, jangan sampai laptopnya ngebul. Respect! 🔥"
+          fi
+          echo "body=$comment" >> $GITHUB_OUTPUT
+
+      - name: Post Comment
+        uses: peter-evans/commit-comment@v2
+        with:
+          body: ${{ steps.comment_body.outputs.body }}

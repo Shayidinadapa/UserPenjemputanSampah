@@ -1,0 +1,23 @@
+name: Security Issue
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  welcome-and-assign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post Welcome Comment
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Terima kasih, @${{ github.event.issue.user.login }}, sudah lapor! 🙏
+            Laporanmu sangat berharga bagi kami. Tim akan segera menindaklanjuti.
+            ![GIF Terima Kasih](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdTkxY2V6Z3gyaHBtbDBsZG5sZmp6bTF6cGwzdWcyNmEybHFwODN6bSZlcD12MV9pbnRlcm5hbF9naWZzX2dpZklkJmN0PWc/3oEdva9BUHPIs2SkGk/giphy.gif)
+
+      - name: Assign Random Person
+        uses: jasonetco/random-assign@v1
+        with:
+          assignees: Shayidinadapa, aldiipratama, MiftahulHuda223040145, Sena606, ZabihullahRPL11
