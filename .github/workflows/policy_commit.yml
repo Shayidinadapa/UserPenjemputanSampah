@@ -5,6 +5,8 @@ on: [push]
 jobs:
   check-commit-message:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Check for lazy commit message
         if: |
