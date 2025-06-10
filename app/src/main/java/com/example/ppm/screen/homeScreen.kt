@@ -34,6 +34,7 @@ fun SugengEWasteHomeScreen(modifier: Modifier = Modifier) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(Color(0xFF00C853))
                 .padding(16.dp)
         ) {
             Column(
@@ -54,7 +55,6 @@ fun SugengEWasteHomeScreen(modifier: Modifier = Modifier) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF00C853))
                 .padding(horizontal = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -69,7 +69,6 @@ fun SugengEWasteHomeScreen(modifier: Modifier = Modifier) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF00C853))
                 .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -120,7 +119,6 @@ fun DonasiCard(title: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .padding(4.dp)
-            .background(Color(0xFF00C853))
             .fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
